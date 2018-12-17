@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 )
 
 func main() {
@@ -27,21 +28,26 @@ func main() {
 	b := 0
 	c := 0
 
+	var wg sync.WaitGroup
 	for i := 0; i < 10000000; i++ {
-		saveFile(folder, i, a, b, c)
-		a++
-		if a == 99 {
-			a = 0
-			b++
+		wg.Add(100)
+		for j := 0; j < 100; j++ {
+			go saveFile(&wg, folder, i, a, b, c)
+			a++
+			if a == 99 {
+				a = 0
+				b++
+			}
+			if b == 999 {
+				b = 0
+				c++
+			}
 		}
-		if b == 999 {
-			b = 0
-			c++
-		}
+		wg.Wait()
 	}
 }
 
-func saveFile(folder string, i int, a int, b int, c int) {
+func saveFile(wg *sync.WaitGroup, folder string, i int, a int, b int, c int) {
 	x := padLeft(fmt.Sprintf("%d", a), 2, "0")
 	y := padLeft(fmt.Sprintf("%d", b), 3, "0")
 	z := padLeft(fmt.Sprintf("%d", c), 3, "0")
@@ -64,6 +70,7 @@ func saveFile(folder string, i int, a int, b int, c int) {
 	} else {
 		fmt.Println("- Passed:  " + url)
 	}
+	wg.Done()
 }
 
 func padLeft(_this string, desiredLength int, pad string) string {
