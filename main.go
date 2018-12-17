@@ -28,11 +28,13 @@ func main() {
 	b := 0
 	c := 0
 
+	const maxThreads = 20
+
 	var wg sync.WaitGroup
-	for i := 0; i < 10000000; i++ {
-		wg.Add(100)
-		for j := 0; j < 100; j++ {
-			go saveFile(&wg, folder, i, a, b, c)
+	for i := 0; i < 1000000000/maxThreads; i++ {
+		for j := 0; j < maxThreads; j++ {
+			wg.Add(1)
+			go saveFile(&wg, folder, i*maxThreads+j, a, b, c)
 			a++
 			if a == 99 {
 				a = 0
